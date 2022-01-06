@@ -313,6 +313,7 @@
       "dist/credentials/ZoomApi.credentials.js",
       "dist/credentials/ZoomOAuth2Api.credentials.js",
       "dist/credentials/ZulipApi.credentials.js",
+      "dist/credentials/Steppay.credentials.js",
       "dist/credentials/Alimtalk.credentials.js"
     ],
     "nodes": [

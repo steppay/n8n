@@ -1,5 +1,8 @@
 import {
 	IDataObject,
+	IHttpRequestOptions,
+	IN8nHttpFullResponse,
+	IN8nHttpResponse,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
@@ -34,6 +37,10 @@ export class SteppayTrigger implements INodeType {
 				name: 'rabbitmq',
 				required: true,
 			},
+			{
+				name: 'steppay',
+				required: true
+			}
 		],
         webhooks: [],
         properties: [
@@ -44,13 +51,42 @@ export class SteppayTrigger implements INodeType {
 				default: '',
 				description: '스텝페이 이벤트',
                 options: Events
+			},
+			{
+				displayName: 'Get vendor',
+				name: 'resolveVendor',
+				type: 'boolean',
+				default: false,
+				description: '이벤트 페이로드에 vendorUuid 가 없으면 무시됩니다.',
+			},
+			{
+				displayName: 'Get customer',
+				name: 'resolveCustomer',
+				type: 'boolean',
+				default: false,
+				description: '이벤트 페이로드에 customerUuid 가 없으면 무시됩니다.',
+			},
+			{
+				displayName: 'Get order',
+				name: 'resolveOrder',
+				type: 'boolean',
+				default: false,
+				description: '이벤트 페이로드에 orderCode 가 없으면 무시됩니다.',
 			}
         ],
     };
     
     async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
+		const serviceUrl = await this.getCredentials('steppay') as {
+			productServiceUrl: string,
+			accountServiceUrl: string
+		};
+
 		const topic = this.getNodeParameter('topic') as string;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
+		const resolveVendor = this.getNodeParameter('resolveVendor') as boolean;
+		const resolveCustomer = this.getNodeParameter('resolveCustomer') as boolean;
+		const resolveOrder = this.getNodeParameter('resolveOrder') as boolean;
 
 		const channel = await rabbitmqConnectExchange.call(this, 'step-bus', 'topic', options);
 
@@ -67,12 +103,10 @@ export class SteppayTrigger implements INodeType {
 					let content: IDataObject | string = message!.content!.toString();
 
 					const item: INodeExecutionData = {
-						json: {},
+						json: JSON.parse(content as string),
 					};
 
-                    content = JSON.parse(content as string);
-                    message.content = content;
-                    item.json = message;
+					await resolveMetadata(this.helpers.httpRequest, serviceUrl, { resolveVendor, resolveCustomer, resolveOrder }, item)
 
 					self.emit([
 						[
@@ -101,6 +135,34 @@ export class SteppayTrigger implements INodeType {
 		// to expect.
 		async function manualTriggerFunction() {
 			startConsumer();
+		}
+
+		async function resolveMetadata(
+			httpRequest: (requestOptions: IHttpRequestOptions) => Promise<IN8nHttpResponse | IN8nHttpFullResponse>,
+			serviceUrl: { productServiceUrl: string, accountServiceUrl: string },
+			params: { resolveVendor: boolean, resolveCustomer: boolean, resolveOrder: boolean },
+			item: INodeExecutionData
+		) {
+			if (params.resolveVendor && item.json.vendorUuid) {
+				item.vendor = await httpRequest({
+					url: `${serviceUrl.accountServiceUrl}/api/internal/vendor/${item.json.vendorUuid}`,
+					method: 'GET',
+				}) as IDataObject
+			}
+
+			if (params.resolveCustomer && item.json.customerUuid) {
+				item.customer = await httpRequest({
+					url: `${serviceUrl.accountServiceUrl}/api/internal/customers/${item.json.customerUuid}`,
+					method: 'GET',
+				}) as IDataObject
+			}
+
+			if (params.resolveOrder && item.json.orderCode) {
+				item.order = await httpRequest({
+					url: `${serviceUrl.productServiceUrl}/api/internal/orders/${item.json.orderCode}`,
+					method: 'GET',
+				}) as IDataObject
+			}
 		}
 
 		return {
