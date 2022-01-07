@@ -7,7 +7,7 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	ITriggerFunctions,
-	ITriggerResponse,
+	ITriggerResponse
 } from 'n8n-workflow';
 
 import Events from './Events';
@@ -71,7 +71,7 @@ export class SteppayTrigger implements INodeType {
 				name: 'resolveOrder',
 				type: 'boolean',
 				default: false,
-				description: '이벤트 페이로드에 orderCode 가 없으면 무시됩니다.',
+				description: '이벤트 페이로드에 orderCode 나 vendorUuid 가 없으면 무시됩니다.',
 			}
         ],
     };
@@ -157,10 +157,11 @@ export class SteppayTrigger implements INodeType {
 				}) as IDataObject
 			}
 
-			if (params.resolveOrder && item.json.orderCode) {
+			if (params.resolveOrder && item.json.orderCode && item.json.vendorUuid) {
 				item.order = await httpRequest({
 					url: `${serviceUrl.productServiceUrl}/api/internal/orders/${item.json.orderCode}`,
 					method: 'GET',
+					headers: { vendorUuid: item.json.vendorUuid }
 				}) as IDataObject
 			}
 		}
