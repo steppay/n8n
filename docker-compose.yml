@@ -2,8 +2,7 @@ version: '3.1'
 
 services:
   n8n:
-    build:
-      context: .
+    image: cr-step.ncr.fin-ntruss.com/n8n:latest
     environment:
       # - EXECUTIONS_MODE=queue
       # - QUEUE_BULL_REDIS_HOST=localhost
