@@ -144,21 +144,21 @@ export class SteppayTrigger implements INodeType {
 			item: INodeExecutionData
 		) {
 			if (params.resolveVendor && item.json.vendorUuid) {
-				item.vendor = await httpRequest({
+				item.json.vendor = await httpRequest({
 					url: `${serviceUrl.accountServiceUrl}/api/internal/vendor/${item.json.vendorUuid}`,
 					method: 'GET',
 				}) as IDataObject
 			}
 
 			if (params.resolveCustomer && item.json.customerUuid) {
-				item.customer = await httpRequest({
+				item.json.customer = await httpRequest({
 					url: `${serviceUrl.accountServiceUrl}/api/internal/customers/${item.json.customerUuid}`,
 					method: 'GET',
 				}) as IDataObject
 			}
 
 			if (params.resolveOrder && item.json.orderCode && item.json.vendorUuid) {
-				item.order = await httpRequest({
+				item.json.order = await httpRequest({
 					url: `${serviceUrl.productServiceUrl}/api/internal/orders/${item.json.orderCode}`,
 					method: 'GET',
 					headers: { vendorUuid: item.json.vendorUuid }
