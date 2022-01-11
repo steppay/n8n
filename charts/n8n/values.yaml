@@ -8,7 +8,7 @@ image:
   repository: l9fjlh66.private-ncr.fin-ntruss.com/n8n
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "0.0.1"
 
 imagePullSecrets:
   - name: regcred
