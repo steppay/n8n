@@ -72,6 +72,13 @@ export class SteppayTrigger implements INodeType {
 				type: 'boolean',
 				default: false,
 				description: '이벤트 페이로드에 orderCode 나 vendorUuid 가 없으면 무시됩니다.',
+			},
+			{
+				displayName: 'Get subscription',
+				name: 'resolveSubscription',
+				type: 'boolean',
+				default: false,
+				description: '이벤트 페이로드에 subscriptionId 나 vendorUuid 가 없으면 무시됩니다.',
 			}
         ],
     };
@@ -87,6 +94,7 @@ export class SteppayTrigger implements INodeType {
 		const resolveVendor = this.getNodeParameter('resolveVendor') as boolean;
 		const resolveCustomer = this.getNodeParameter('resolveCustomer') as boolean;
 		const resolveOrder = this.getNodeParameter('resolveOrder') as boolean;
+		const resolveSubscription = this.getNodeParameter('resolveSubscription') as boolean;
 
 		const channel = await rabbitmqConnectExchange.call(this, 'step-bus', 'topic', options);
 
@@ -106,7 +114,7 @@ export class SteppayTrigger implements INodeType {
 						json: JSON.parse(content as string),
 					};
 
-					await resolveMetadata(this.helpers.httpRequest, serviceUrl, { resolveVendor, resolveCustomer, resolveOrder }, item)
+					await resolveMetadata(this.helpers.httpRequest, serviceUrl, { resolveVendor, resolveCustomer, resolveOrder, resolveSubscription }, item)
 
 					self.emit([
 						[
@@ -140,7 +148,7 @@ export class SteppayTrigger implements INodeType {
 		async function resolveMetadata(
 			httpRequest: (requestOptions: IHttpRequestOptions) => Promise<IN8nHttpResponse | IN8nHttpFullResponse>,
 			serviceUrl: { productServiceUrl: string, accountServiceUrl: string },
-			params: { resolveVendor: boolean, resolveCustomer: boolean, resolveOrder: boolean },
+			params: { resolveVendor: boolean, resolveCustomer: boolean, resolveOrder: boolean, resolveSubscription: boolean },
 			item: INodeExecutionData
 		) {
 			if (params.resolveVendor && item.json.vendorUuid) {
@@ -160,6 +168,14 @@ export class SteppayTrigger implements INodeType {
 			if (params.resolveOrder && item.json.orderCode && item.json.vendorUuid) {
 				item.json.order = await httpRequest({
 					url: `${serviceUrl.productServiceUrl}/api/internal/orders/${item.json.orderCode}`,
+					method: 'GET',
+					headers: { vendorUuid: item.json.vendorUuid }
+				}) as IDataObject
+			}
+
+			if (params.resolveSubscription && item.json.subscriptionId && item.json.vendorUuid) {
+				item.json.order = await httpRequest({
+					url: `${serviceUrl.productServiceUrl}/api/internal/subscriptions/${item.json.subscriptionId}`,
 					method: 'GET',
 					headers: { vendorUuid: item.json.vendorUuid }
 				}) as IDataObject
