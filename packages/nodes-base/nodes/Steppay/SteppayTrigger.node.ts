@@ -174,7 +174,7 @@ export class SteppayTrigger implements INodeType {
 			}
 
 			if (params.resolveSubscription && item.json.subscriptionId && item.json.vendorUuid) {
-				item.json.order = await httpRequest({
+				item.json.subscription = await httpRequest({
 					url: `${serviceUrl.productServiceUrl}/api/internal/subscriptions/${item.json.subscriptionId}`,
 					method: 'GET',
 					headers: { vendorUuid: item.json.vendorUuid }
