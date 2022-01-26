@@ -131,8 +131,8 @@ export class SteppayTrigger implements INodeType {
 		// The "closeFunction" function gets called by n8n whenever
 		// the workflow gets deactivated and can so clean up.
 		async function closeFunction() {
-			await channel.close();
-			await channel.connection.close();
+			try { await channel.close(); } catch(err) { }
+			try { await channel.connection.close(); } catch(err) { }
 		}
 
 		// The "manualTriggerFunction" function gets called by n8n
