@@ -44,6 +44,13 @@ export class SteppayTrigger implements INodeType {
 		],
         webhooks: [],
         properties: [
+			{
+				displayName: 'Queue',
+				name: 'queue',
+				type: 'string',
+				default: '',
+				description: '큐 이름'
+			},
             {
 				displayName: 'Event',
 				name: 'topic',
@@ -89,6 +96,7 @@ export class SteppayTrigger implements INodeType {
 			accountServiceUrl: string
 		};
 
+		const queue = this.getNodeParameter('queue') as string;
 		const topic = this.getNodeParameter('topic') as string;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
 		const resolveVendor = this.getNodeParameter('resolveVendor') as boolean;
@@ -101,8 +109,8 @@ export class SteppayTrigger implements INodeType {
 		const self = this;
 
 		const startConsumer = async () => {
-            const q = await channel.assertQueue('', {
-                exclusive: true
+            const q = await channel.assertQueue(queue, {
+                durable: true
             })
 
             channel.bindQueue(q.queue, 'step-bus', topic);
