@@ -67,6 +67,13 @@ export class SteppayTrigger implements INodeType {
 				description: '이벤트 페이로드에 vendorUuid 가 없으면 무시됩니다.',
 			},
 			{
+				displayName: 'Get store',
+				name: 'resolveStore',
+				type: 'boolean',
+				default: false,
+				description: '이벤트 페이로드에 vendorUuid 가 없으면 무시됩니다.',
+			},
+			{
 				displayName: 'Get customer',
 				name: 'resolveCustomer',
 				type: 'boolean',
@@ -93,13 +100,15 @@ export class SteppayTrigger implements INodeType {
     async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
 		const serviceUrl = await this.getCredentials('steppay') as {
 			productServiceUrl: string,
-			accountServiceUrl: string
+			accountServiceUrl: string,
+			storeServiceUrl: string
 		};
 
 		const queue = this.getNodeParameter('queue') as string;
 		const topic = this.getNodeParameter('topic') as string;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
 		const resolveVendor = this.getNodeParameter('resolveVendor') as boolean;
+		const resolveStore = this.getNodeParameter('resolveStore') as boolean;
 		const resolveCustomer = this.getNodeParameter('resolveCustomer') as boolean;
 		const resolveOrder = this.getNodeParameter('resolveOrder') as boolean;
 		const resolveSubscription = this.getNodeParameter('resolveSubscription') as boolean;
@@ -122,7 +131,7 @@ export class SteppayTrigger implements INodeType {
 						json: JSON.parse(content as string),
 					};
 
-					await resolveMetadata(this.helpers.httpRequest, serviceUrl, { resolveVendor, resolveCustomer, resolveOrder, resolveSubscription }, item)
+					await resolveMetadata(this.helpers.httpRequest, serviceUrl, { resolveVendor, resolveStore, resolveCustomer, resolveOrder, resolveSubscription }, item)
 
 					self.emit([
 						[
@@ -155,8 +164,8 @@ export class SteppayTrigger implements INodeType {
 
 		async function resolveMetadata(
 			httpRequest: (requestOptions: IHttpRequestOptions) => Promise<IN8nHttpResponse | IN8nHttpFullResponse>,
-			serviceUrl: { productServiceUrl: string, accountServiceUrl: string },
-			params: { resolveVendor: boolean, resolveCustomer: boolean, resolveOrder: boolean, resolveSubscription: boolean },
+			serviceUrl: { productServiceUrl: string, accountServiceUrl: string, storeServiceUrl: string },
+			params: { resolveVendor: boolean, resolveStore: boolean, resolveCustomer: boolean, resolveOrder: boolean, resolveSubscription: boolean },
 			item: INodeExecutionData
 		) {
 			if (params.resolveVendor && item.json.vendorUuid) {
@@ -165,6 +174,15 @@ export class SteppayTrigger implements INodeType {
 					method: 'GET',
 				}) as IDataObject
 			}
+
+			try {
+				if (params.resolveStore && item.json.vendorUuid) {
+					item.json.store = await httpRequest({
+						url: `${serviceUrl.storeServiceUrl}/api/internal/stores/vendor/${item.json.vendorUuid}/metadata`,
+						method: 'GET',
+					}) as IDataObject
+				}
+			} catch (err) { }
 
 			if (params.resolveCustomer && item.json.customerUuid) {
 				item.json.customer = await httpRequest({
