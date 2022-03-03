@@ -6,13 +6,12 @@ USER root
 
 # Install all needed dependencies
 RUN apk --update add --virtual build-dependencies python build-base ca-certificates && \
-	npm_config_user=root npm install -g lerna yarn
+	npm_config_user=root npm install -g lerna
 
 WORKDIR /data
 
 COPY lerna.json .
 COPY package.json .
-COPY yarn.lock .
 COPY package-lock.json .
 COPY packages/cli/ ./packages/cli/
 COPY packages/core/ ./packages/core/
@@ -22,9 +21,9 @@ COPY packages/nodes-base/ ./packages/nodes-base/
 COPY packages/workflow/ ./packages/workflow/
 RUN rm -rf node_modules packages/*/node_modules packages/*/dist
 
-RUN yarn
+RUN npm install --loglevel notice
 RUN lerna bootstrap --hoist -- --production
-RUN yarn build
+RUN npm run build
 
 
 # 2. Start with a new clean image with just the code that is needed to run n8n
