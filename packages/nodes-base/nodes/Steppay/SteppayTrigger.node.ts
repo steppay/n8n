@@ -138,9 +138,8 @@ export class SteppayTrigger implements INodeType {
 							item,
 						],
 					]);
-					channel.ack(message);
 				}
-			});
+			}, { noAck: true });
 		};
 
 		startConsumer();
