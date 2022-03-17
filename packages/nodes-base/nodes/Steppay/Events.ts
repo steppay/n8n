@@ -28,7 +28,12 @@ const Events = [
         name: '배송 시작',
         value: "step.delivery.started",
         description: '배송 시작 이벤트'
-    }
+    },
+	{
+		name: '결제 미리 알림',
+		value: 'step.product.notify.payment',
+		description: '결제 미리 알림'
+	}
 ]
 
 export default Events
