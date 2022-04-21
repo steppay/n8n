@@ -136,8 +136,8 @@ export class SteppayTrigger implements INodeType {
 
 		const queue = this.getNodeParameter('queue') as string;
 		const useCustomTopic = this.getNodeParameter('useCustomTopic') as boolean;
-		const topic = this.getNodeParameter('topic') as string;
-		const customTopic = this.getNodeParameter('customTopic') as string;
+		const topic = !useCustomTopic ? this.getNodeParameter('topic') as string : undefined;
+		const customTopic = useCustomTopic ? this.getNodeParameter('customTopic') as string: undefined;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
 		const resolveVendor = this.getNodeParameter('resolveVendor') as boolean;
 		const resolveStore = this.getNodeParameter('resolveStore') as boolean;
