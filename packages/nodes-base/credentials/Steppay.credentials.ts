@@ -24,6 +24,12 @@ export class Steppay implements ICredentialType {
 			name: 'storeServiceUrl',
 			type: 'string',
 			default: '',
+		},
+		{
+			displayName: 'env',
+			name: 'env',
+			type: 'string',
+			default: ''
 		}
 	];
 }

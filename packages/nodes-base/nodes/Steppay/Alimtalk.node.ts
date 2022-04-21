@@ -42,12 +42,21 @@ export class Alimtalk implements INodeType {
     
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
         const { appkey, xSecretKey, senderKey } = await this.getCredentials('alimtalk') as { appkey: string, xSecretKey: string, senderKey: string }
+        const { env } = await this.getCredentials('steppay') as { env: string };
+
         const templateCode = this.getNodeParameter('templateCode', 0) as string
         
-        const recipientList = this.getInputData().map(({ json }) => ({
-            recipientNo: json.recipientNo,
-            templateParameter: json.templateParameter
-        }))
+        const recipientList = this.getInputData().map(({ json }) => {
+            let templateParameter = json.templateParameter as any
+            if (env) {
+                templateParameter.nudge = env
+            }
+
+            return { 
+                recipientNo: json.recipientNo,
+                templateParameter
+            }
+        })
 
         const response = await this.helpers.httpRequest({
             url: `https://api-alimtalk.cloud.toast.com/alimtalk/v2.2/appkeys/${appkey}/messages`,

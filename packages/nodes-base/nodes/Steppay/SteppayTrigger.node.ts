@@ -49,15 +49,45 @@ export class SteppayTrigger implements INodeType {
 				name: 'queue',
 				type: 'string',
 				default: '',
-				description: '큐 이름'
+				description: '큐 이름',
+				required: true
+			},
+			{
+				displayName: '토픽 직접 입력',
+				name: 'useCustomTopic',
+				type: 'boolean',
+				default: false,
+				description: '추가적인 토픽을 구독하고 싶을 때 사용합니다.',
+				required: true
 			},
             {
 				displayName: 'Event',
 				name: 'topic',
 				type: 'options',
+				displayOptions: {
+					show: {
+						useCustomTopic: [
+							false
+						],
+					},
+				},
 				default: '',
 				description: '스텝페이 이벤트',
                 options: Events
+			},
+			{
+				displayName: 'Topic',
+				name: 'customTopic',
+				type: 'string',
+				displayOptions: {
+					show: {
+						useCustomTopic: [
+							true
+						],
+					},
+				},
+				default: '',
+				description: '구독할 토픽'
 			},
 			{
 				displayName: 'Get vendor',
@@ -105,7 +135,9 @@ export class SteppayTrigger implements INodeType {
 		};
 
 		const queue = this.getNodeParameter('queue') as string;
+		const useCustomTopic = this.getNodeParameter('useCustomTopic') as boolean;
 		const topic = this.getNodeParameter('topic') as string;
+		const customTopic = this.getNodeParameter('customTopic') as string;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
 		const resolveVendor = this.getNodeParameter('resolveVendor') as boolean;
 		const resolveStore = this.getNodeParameter('resolveStore') as boolean;
@@ -122,7 +154,7 @@ export class SteppayTrigger implements INodeType {
                 durable: true
             })
 
-            channel.bindQueue(q.queue, 'step-bus', topic);
+            channel.bindQueue(q.queue, 'step-bus', useCustomTopic ? customTopic : topic);
 			await channel.consume(q.queue, async (message: IDataObject) => {
 				if (message !== null) {
 					let content: IDataObject | string = message!.content!.toString();
