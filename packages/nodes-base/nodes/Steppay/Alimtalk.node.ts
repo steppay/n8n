@@ -27,6 +27,10 @@ export class Alimtalk implements INodeType {
 				name: 'alimtalk',
 				required: true,
 			},
+            {
+                name: 'steppay',
+                required: true
+            }
 		],
         webhooks: [],
         properties: [

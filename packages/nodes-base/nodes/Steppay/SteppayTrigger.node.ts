@@ -24,7 +24,7 @@ export class SteppayTrigger implements INodeType {
         icon: 'file:Steppay.svg',
         group: ['trigger'],
         version: 1,
-        subtitle: '={{$parameter["topic"]}}',
+        subtitle: '={{$parameter["useCustomTopic"]?$parameter["customTopic"]:$parameter["topic"]}}',
         description: 'Handle Steppay events via RabbitMQ',
         defaults: {
             name: 'Steppay Trigger',
