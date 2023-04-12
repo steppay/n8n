@@ -216,8 +216,13 @@ export class SteppayTrigger implements INodeType {
 			} catch (err) { }
 
 			if (params.resolveCustomer && item.json.customerUuid) {
-				item.json.customer = await httpRequest({
+				const customer = await httpRequest({
 					url: `${serviceUrl.accountServiceUrl}/api/internal/customers/${item.json.customerUuid}`,
+					method: 'GET',
+				}) as { id: number }
+
+				item.json.customer = await httpRequest({
+					url: `${serviceUrl.productServiceUrl}/api/internal/customers/${customer.id}`,
 					method: 'GET',
 				}) as IDataObject
 			}
